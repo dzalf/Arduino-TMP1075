@@ -21,16 +21,15 @@
 #include "TMP1075.h"
 
 namespace TMP1075 {
-  TMP1075::TMP1075(TwoWire &_wire, const uint8_t _i2cAdress): wire(_wire), i2cAdress(_i2cAdress), configRegister(0x00FF) {}
+  TMP1075::TMP1075(TwoWire& _wire, const uint8_t _i2cAddress): wire(_wire), i2cAddress(_i2cAddress), configRegister(0x00FF) {}
 
   void TMP1075::begin()
   {
-    this->wire.begin(this->i2cAdress);
     this->configRegister = (uint8_t)(this->readRegister(0x01) >> 8);
   }
 
   void TMP1075::writeRegister(const uint8_t pointerRegister, const uint16_t value) {
-    this->wire.beginTransmission(this->i2cAdress);
+    this->wire.beginTransmission(this->i2cAddress);
     this->wire.write(pointerRegister);
     this->wire.write((value >> 8) & 0xFF);
     this->wire.write((value >> 0) & 0xFF);
@@ -38,17 +37,17 @@ namespace TMP1075 {
   }
 
   void TMP1075::writeRegister(const uint8_t pointerRegister, const uint8_t value) {
-    this->wire.beginTransmission(this->i2cAdress);
+    this->wire.beginTransmission(this->i2cAddress);
     this->wire.write(pointerRegister);
     this->wire.write(value);
     this->wire.endTransmission();
   }
 
   uint16_t TMP1075::readRegister(const uint8_t pointerRegister) {
-    this->wire.beginTransmission(this->i2cAdress);
+    this->wire.beginTransmission(this->i2cAddress);
     this->wire.write(pointerRegister);
     this->wire.endTransmission(false);
-    this->wire.requestFrom(this->i2cAdress, 2, true);
+    this->wire.requestFrom(this->i2cAddress, (uint8_t)2, (uint8_t)true);
     return this->wire.read() << 8 | this->wire.read();
   }
 
@@ -57,7 +56,7 @@ namespace TMP1075 {
   }
 
   float TMP1075::getTemperatureCelsius() {
-    return this->convertToCelsius(this->getTemperatureRaw());
+    return TMP1075::TMP1075::convertToCelsius(this->getTemperatureRaw());
   }
 
   void TMP1075::startConversion() {
@@ -65,7 +64,7 @@ namespace TMP1075 {
     this->writeRegister(0x01, (uint8_t)(this->configRegister | (1 << Offsets::OS)));
   }
 
-  bool TMP1075::getConversionMode() {
+  bool TMP1075::getConversionMode() const {
     return (this->configRegister >> Offsets::SD) & 0b1;
   }
 
@@ -76,7 +75,7 @@ namespace TMP1075 {
     }
   }
 
-  ConversionTime TMP1075::getConversionTime() {
+  ConversionTime TMP1075::getConversionTime() const {
     return ConversionTime((this->configRegister >> Offsets::R) & 0b11);
   }
 
@@ -87,7 +86,7 @@ namespace TMP1075 {
     }
   }
 
-  ConsecutiveFaults TMP1075::getFaultsUntilAlert() {
+  ConsecutiveFaults TMP1075::getFaultsUntilAlert() const {
     return ConsecutiveFaults((this->configRegister >> Offsets::F) & 0b11);
   }
 
@@ -98,7 +97,7 @@ namespace TMP1075 {
     }
   }
 
-  bool TMP1075::getAlertPolarity() {
+  bool TMP1075::getAlertPolarity() const {
     return (this->configRegister >> Offsets::POL) & 0b1;
   }
 
@@ -109,7 +108,7 @@ namespace TMP1075 {
     }
   }
 
-  bool TMP1075::getAlertMode() {
+  bool TMP1075::getAlertMode() const {
     return (this->configRegister >> Offsets::TM) & 0b1;
   }
 
@@ -129,11 +128,11 @@ namespace TMP1075 {
   }
 
   void TMP1075::setLowTemperatureLimitCelsius(const float value) {
-    this->setLowTemperatureLimitRaw(this->convertFromCelsius(value));
+    this->setLowTemperatureLimitRaw(TMP1075::TMP1075::convertFromCelsius(value));
   }
 
   float TMP1075::getLowTemperatureLimitCelsius() {
-    return this->convertToCelsius(this->getLowTemperatureLimitRaw());
+    return TMP1075::TMP1075::convertToCelsius(this->getLowTemperatureLimitRaw());
   }
 
   int16_t TMP1075::getHighTemperatureLimitRaw() {
@@ -141,7 +140,7 @@ namespace TMP1075 {
   }
 
   float TMP1075::getHighTemperatureLimitCelsius() {
-    return this->convertToCelsius(this->getHighTemperatureLimitRaw());
+    return TMP1075::TMP1075::convertToCelsius(this->getHighTemperatureLimitRaw());
   }
 
   void TMP1075::setHighTemperatureLimitRaw(const int16_t value) {
@@ -149,7 +148,7 @@ namespace TMP1075 {
   }
 
   void TMP1075::setHighTemperatureLimitCelsius(const float value) {
-    this->setHighTemperatureLimitRaw(this->convertFromCelsius(value));
+    this->setHighTemperatureLimitRaw(TMP1075::TMP1075::convertFromCelsius(value));
   }
 
   uint8_t TMP1075::getDeviceId() {
@@ -157,11 +156,10 @@ namespace TMP1075 {
   }
 
   float TMP1075::convertToCelsius(const int16_t value) {
-    return 0.0625f * value / 16;
+    return 0.0625f * float(value) / 16;
   }
 
   int16_t TMP1075::convertFromCelsius(const float value) {
-    return  value * 16 / 0.0625f;
+    return  (int16_t)(value * 16 / 0.0625f);
   }
-}   // namespace
-
+}   // namespace TMP1075
